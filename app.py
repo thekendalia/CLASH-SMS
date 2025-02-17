@@ -306,6 +306,9 @@ def users():
 def account():
     email = dict(session).get("email", None)
     istrue, id, username, cemail, clan_tag, terms, phone = clashuser.user_data(email)
+    if clan_tag == '0':
+        session['tab'] = "account"
+        return redirect(url_for("accounttag"))
     print(clan_tag)
     tag = clan_tag[1:]
     response4 = requests.get(f"https://api.clashofclans.com/v1/players/%23{tag}", headers=headers)

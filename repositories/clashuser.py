@@ -99,7 +99,7 @@ def login_user(username: str, userpass: str):
     pool = get_pool()  
     with pool.connection() as conn:  
         with conn.cursor() as cur: 
-            cur.execute('SELECT id, username, email, password FROM users WHERE username = %s OR email = %s', (username, username))  
+            cur.execute('SELECT id, username, email, password FROM users WHERE lower(username) = %s OR lower(email) = %s', (username, username))  
             user_record = cur.fetchone()  
             
             if user_record:  
