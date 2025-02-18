@@ -76,7 +76,7 @@ def send(code, email):
     print(email)
     msg = Message(
         f"{code} Password Reset",
-        sender=("Dark Rose Support", "support@darkroseclan.com"),
+        sender=("Clan War SMS Support", "support@darkroseclan.com"),
         recipients=[f"{email}"],
     )
     msg.html = f"""  
@@ -147,6 +147,29 @@ def phone():
     number = country + " " + phone
     clashuser.update_phone(email, number)
     return redirect(url_for('account'))
+
+@app.route('/error')
+def error():
+    return render_template('error.html')
+
+@app.route('/error_msg')
+def error_msg():
+    msg = Message(
+        f"Error Reported!",
+        sender=("Clan War SMS", "support@darkroseclan.com"),
+        recipients=[f"kenbazonct14@gmail.com"],
+    )
+    msg.html = f"""  
+    <html>  
+        <body>  
+            <p>Error message pressed! Check the logs!</p>
+            <img src="cid:image1">  
+        </body>  
+    </html>"""
+    mail.send(msg)
+    return redirect(url_for('home'))
+
+
 
 @app.route("/delete_phone")
 def delete_phone():
@@ -485,52 +508,64 @@ from otherpy.war import monitor_war
 
 @app.post("/createacc")
 def create_acc():
-    username = request.form["username"]
-    email = request.form["email"]
-    password = request.form["password"]
-    confirmpass = request.form["confirm-password"]
-    captcha_response = request.form["g-recaptcha-response"]
-    user = username.lower()
-    lower_email = email.lower()
-    if password != confirmpass:
-        return redirect(
-            url_for("create", submitted=True, message="Mismatched Password")
-        )
-    exists = clashuser.existingaccount(user)
-    email_exists = clashuser.existingemail(lower_email)
-    if exists:
-        return redirect(url_for("create", submitted=True, message="Username taken"))
-    if email_exists:
-        return redirect(
-            url_for(
-                "create",
-                submitted=True,
-                message="An account with that email already exists!",
+    try:
+        username = request.form["username"]
+        email = request.form["email"]
+        password = request.form["password"]
+        confirmpass = request.form["confirm-password"]
+        captcha_response = request.form["g-recaptcha-response"]
+        user = username.lower()
+        lower_email = email.lower()
+        if password != confirmpass:
+            return redirect(
+                url_for("create", submitted=True, message="Mismatched Password")
             )
+        exists = clashuser.existingaccount(user)
+        email_exists = clashuser.existingemail(lower_email)
+        if exists:
+            return redirect(url_for("create", submitted=True, message="Username taken"))
+        if email_exists:
+            return redirect(
+                url_for(
+                    "create",
+                    submitted=True,
+                    message="An account with that email already exists!",
+                )
+            )
+        if is_human(captcha_response) == False:
+            return redirect(url_for("create", submitted=True, message="Captcha Failed!"))
+        hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode(
+            "utf-8"
         )
-    if is_human(captcha_response) == False:
-        return redirect(url_for("create", submitted=True, message="Captcha Failed!"))
-    hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode(
-        "utf-8"
-    )
-    clashuser.new_account(username, email, hashed_password)
+        clashuser.new_account(username, email, hashed_password)
 
-    return redirect(url_for("login"))
+        return redirect(url_for("login"))
+    except Exception as e:
+        print(f"Error during login: {e}")  # Log the error for debugging
+        return redirect(url_for("error", message="An unexpected error occurred. Please try again."))
 
 
 @app.post("/userlogin")
 def userlogin():
-    username = request.form["username"]
-    password = request.form["password"]
-    user = username.lower()
-    log, id, username, email = clashuser.login_user(user, password)
-    print(log)
-    if log == False:
-        return redirect(url_for("login", submitted=True, message="Incorrect Password"))
-    else:
+    try:
+        username = request.form["username"]
+        password = request.form["password"]
+        user = username.lower()
+
+        log, id, username, email = clashuser.login_user(user, password)
+        print(log)
+
+        if log == False:
+            return redirect(url_for("login", submitted=True, message="Incorrect Password"))
+
         session["username"] = username
         session["email"] = email
-    return redirect(url_for("home"))
+        return redirect(url_for("home"))
+
+    except Exception as e:
+        print(f"Error during login: {e}")  # Log the error for debugging
+        return redirect(url_for("error", message="An unexpected error occurred. Please try again."))
+
 
 
 @app.post("/adminlogin")
