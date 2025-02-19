@@ -86,8 +86,9 @@ def monitor_war():
                         if player_tag[5] == enemy_name:
                             print("Already Alerted!")
                             continue
-                        elif 0 < time_difference <= 7200 and attacks_left > 0:
+                        elif 0 < time_difference <= 7200 and (attacks_left == 0 or attacks_left == 1):
                             clashuser.update_enemy_clan(player_tag[0], enemy_name)
-                            send_war_reminder(player_tag[0],player_tag[3],player_tag[4], attacks_left)
+                            attacks = 2 - attacks_left
+                            send_war_reminder(player_tag[0],player_tag[3],player_tag[4], attacks)
 
         time.sleep(120)  # Check every minute

@@ -8,7 +8,7 @@ client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
 def send_sms(id, phone, username, attacks):
     message = client.messages.create(
-        body=f"{username} you have {attacks} remaining in war! Only a couple hours left!",
+        body=f"{username} you have {attacks} attacks remaining in war! Only a couple hours left!",
         from_="+18667831078",
         to=f"{phone}",
     )

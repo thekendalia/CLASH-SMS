@@ -193,26 +193,30 @@ def accept_terms():
 
 @app.post("/forgot_password")
 def forgot_password():
-    random_number = random.randint(1000, 9999)
-    email = request.form["email"]
-    captcha_response = request.form["g-recaptcha-response"]
-    email_lower = email.lower()
-    check = clashuser.existingemail(email_lower)
-    if check and is_human(captcha_response):
-        print(random_number)
-        print(email)
-        session["verify"] = email_lower
-        clashuser.update_user_code(random_number, email_lower)
-        send(random_number, email)
-        return redirect(url_for("code"))
-    elif is_human(captcha_response) == False:
-        return redirect(
-            url_for("passreset", submitted=True, message="You forgot Captcha!")
-        )
-    else:
-        return redirect(
-            url_for("passreset", submitted=True, message="Email not registered")
-        )
+    try:
+        random_number = random.randint(1000, 9999)
+        email = request.form["email"]
+        captcha_response = request.form["g-recaptcha-response"]
+        email_lower = email.lower()
+        check = clashuser.existingemail(email_lower)
+        if check and is_human(captcha_response):
+            print(random_number)
+            print(email)
+            session["verify"] = email_lower
+            clashuser.update_user_code(random_number, email_lower)
+            send(random_number, email)
+            return redirect(url_for("code"))
+        elif is_human(captcha_response) == False:
+            return redirect(
+                url_for("passreset", submitted=True, message="You forgot Captcha!")
+            )
+        else:
+            return redirect(
+                url_for("passreset", submitted=True, message="Email not registered")
+            )
+    except Exception as e:
+        print(f"Error during login: {e}")  # Log the error for debugging
+        return redirect(url_for("error", message="An unexpected error occurred. Please try again."))
 
 
 def is_human(captcha_response):
@@ -264,22 +268,26 @@ def index():
 
 @app.get("/clanstats")
 def clanstats():
-    email = dict(session).get("email", None)
-    istrue, id, username, cemail, clan_tag, terms, phone = clashuser.user_data(email)
-    if clan_tag == '0':
-        session['tab'] = "clanstats"
-        return redirect(url_for("accounttag"))
-    clanshort = clan_tag[1:]
-    clantag = requests.get(f"https://api.clashofclans.com/v1/players/%23{clanshort}", headers=headers)
-    playerdata = clantag.json()
-    player_clan = playerdata['clan']['tag'][1:]
-    response2 = requests.get(f"https://api.clashofclans.com/v1/clans/%23{player_clan}/warlog", headers=headers)
-    response3 = requests.get(f"https://api.clashofclans.com/v1/clans/%23{player_clan}", headers=headers)
-    warlog = response2.json()
-    clan = response3.json()
-    wars = warlog.get("items", [])
-    drose = "Dark Rose"
-    return render_template("clan_stats.html", drose=drose, wars=wars, clandata=clan)
+    try:
+        email = dict(session).get("email", None)
+        istrue, id, username, cemail, clan_tag, terms, phone = clashuser.user_data(email)
+        if clan_tag == '0':
+            session['tab'] = "clanstats"
+            return redirect(url_for("accounttag"))
+        clanshort = clan_tag[1:]
+        clantag = requests.get(f"https://api.clashofclans.com/v1/players/%23{clanshort}", headers=headers)
+        playerdata = clantag.json()
+        player_clan = playerdata['clan']['tag'][1:]
+        response2 = requests.get(f"https://api.clashofclans.com/v1/clans/%23{player_clan}/warlog", headers=headers)
+        response3 = requests.get(f"https://api.clashofclans.com/v1/clans/%23{player_clan}", headers=headers)
+        warlog = response2.json()
+        clan = response3.json()
+        wars = warlog.get("items", [])
+        drose = "Dark Rose"
+        return render_template("clan_stats.html", drose=drose, wars=wars, clandata=clan)
+    except Exception as e:
+        print(f"Error during login: {e}")  # Log the error for debugging
+        return redirect(url_for("error", message="An unexpected error occurred. Please try again."))
 
 
 @app.route("/api/member-names")
@@ -293,25 +301,29 @@ def get_members():
 
 @app.route("/accounttag", methods=['GET', 'POST'])
 def accounttag():
-    message = request.args.get("message", "")
-    if request.method == 'POST':
-        email = dict(session).get("email", None)
-        tab = dict(session).get("tab", None)
-        tag = request.form['tag']
-        modifiedtag = tag[1:]
-        session['tag'] = modifiedtag
-        response4 = requests.get(f"https://api.clashofclans.com/v1/players/%23{modifiedtag}", headers=headers)
-        clanwar = response4.json()
-        if clanwar.get('reason') == 'notFound':
-            return redirect(url_for('accounttag', submitted=True, message="Account not found, try again!"))
-        else:
-            player_clan = clanwar['clan']['tag']
-            if player_clan == None:
-                player_clan = 0
-            clashuser.update_clan_tag(tag, email, player_clan)
-        print(tab)
-        return redirect(url_for(tab))
-    return render_template("entertag.html", message=message)
+    try:
+        message = request.args.get("message", "")
+        if request.method == 'POST':
+            email = dict(session).get("email", None)
+            tab = dict(session).get("tab", None)
+            tag = request.form['tag']
+            modifiedtag = tag[1:]
+            session['tag'] = modifiedtag
+            response4 = requests.get(f"https://api.clashofclans.com/v1/players/%23{modifiedtag}", headers=headers)
+            clanwar = response4.json()
+            if clanwar.get('reason') == 'notFound':
+                return redirect(url_for('accounttag', submitted=True, message="Account not found, try again!"))
+            else:
+                player_clan = clanwar['clan']['tag']
+                if player_clan == None:
+                    player_clan = 0
+                clashuser.update_clan_tag(tag, email, player_clan)
+            print(tab)
+            return redirect(url_for(tab))
+        return render_template("entertag.html", message=message)
+    except Exception as e:
+        print(f"Error during login: {e}")  # Log the error for debugging
+        return redirect(url_for("error", message="An unexpected error occurred. Please try again."))
 
 @app.get('/users')  
 def users():
@@ -327,25 +339,29 @@ def users():
 
 @app.get("/account")
 def account():
-    email = dict(session).get("email", None)
-    istrue, id, username, cemail, clan_tag, terms, phone = clashuser.user_data(email)
-    if clan_tag == '0':
-        session['tab'] = "account"
-        return redirect(url_for("accounttag"))
-    print(clan_tag)
-    tag = clan_tag[1:]
-    response4 = requests.get(f"https://api.clashofclans.com/v1/players/%23{tag}", headers=headers)
-    clanwar = response4.json()
-    if email == None:
-        return redirect(url_for("home"))
-    if skip and skip[0] == "Not Set":
-        player = "Not Set"
-        skip.clear()
-        return render_template("account.html", username=username, email=cemail, tag=clan_tag, player=player, terms=terms, phone=phone)
-    if clan_tag == "0":
-        return redirect(url_for("accounttag"))
-    return render_template("account.html", username=username, email=cemail, tag=clan_tag, player=clanwar,terms=terms, phone=phone)
-
+    try:
+        email = dict(session).get("email", None)
+        istrue, id, username, cemail, clan_tag, terms, phone = clashuser.user_data(email)
+        if clan_tag == '0':
+            session['tab'] = "account"
+            return redirect(url_for("accounttag"))
+        print(clan_tag)
+        tag = clan_tag[1:]
+        response4 = requests.get(f"https://api.clashofclans.com/v1/players/%23{tag}", headers=headers)
+        clanwar = response4.json()
+        if email == None:
+            return redirect(url_for("home"))
+        if skip and skip[0] == "Not Set":
+            player = "Not Set"
+            skip.clear()
+            return render_template("account.html", username=username, email=cemail, tag=clan_tag, player=player, terms=terms, phone=phone)
+        if clan_tag == "0":
+            return redirect(url_for("accounttag"))
+        return render_template("account.html", username=username, email=cemail, tag=clan_tag, player=clanwar,terms=terms, phone=phone)
+    except Exception as e:
+        print(f"Error during login: {e}")  # Log the error for debugging
+        return redirect(url_for("error", message="An unexpected error occurred. Please try again."))
+    
 @app.get("/accountskip")
 def accountskip():
     email = dict(session).get("email", None)
@@ -409,78 +425,82 @@ def auth():
 
 @app.get("/currentwar")
 def current_war():
-    email = dict(session).get("email", None)
-    istrue, id, username, cemail, clan_tag, terms, phone = clashuser.user_data(email)
-    if clan_tag == '0':
-        session['tab'] = "clanstats"
-        return redirect(url_for("accounttag"))
-    clanshort = clan_tag[1:]
-    clantag = requests.get(f"https://api.clashofclans.com/v1/players/%23{clanshort}", headers=headers)
-    playerdata = clantag.json()
-    player_clan = playerdata['clan']['tag'][1:]
-    response4 = requests.get(f"https://api.clashofclans.com/v1/clans/%23{player_clan}/currentwar", headers=headers)
-    clanwar = response4.json()
-    print(clanwar)
-    zero, one, two, three = 0, 0, 0, 0
-    oppzero, oppone, opptwo, oppthree = 0, 0, 0, 0
-    if clanwar["state"] == "notInWar":
-        clan = "notInWar"
-        return render_template("current_war.html", clan=clanwar)
-    else:
-        for member in clanwar["clan"]["members"]:
-            if "attacks" in member:
-                for attack in member["attacks"]:
-                    stars = attack["stars"]
-                    if stars == 0:
-                        zero += 1
-                    elif stars == 1:
-                        one += 1
-                    elif stars == 2:
-                        two += 1
-                    elif stars == 3:
-                        three += 1
-        for member in clanwar["opponent"]["members"]:
-            if "attacks" in member:
-                for attack in member["attacks"]:
-                    stars = attack["stars"]
-                    if stars == 0:
-                        oppzero += 1
-                    elif stars == 1:
-                        oppone += 1
-                    elif stars == 2:
-                        opptwo += 1
-                    elif stars == 3:
-                        oppthree += 1
-        members_info = []
+    try: 
+        email = dict(session).get("email", None)
+        istrue, id, username, cemail, clan_tag, terms, phone = clashuser.user_data(email)
+        if clan_tag == '0':
+            session['tab'] = "clanstats"
+            return redirect(url_for("accounttag"))
+        clanshort = clan_tag[1:]
+        clantag = requests.get(f"https://api.clashofclans.com/v1/players/%23{clanshort}", headers=headers)
+        playerdata = clantag.json()
+        player_clan = playerdata['clan']['tag'][1:]
+        response4 = requests.get(f"https://api.clashofclans.com/v1/clans/%23{player_clan}/currentwar", headers=headers)
+        clanwar = response4.json()
+        print(clanwar)
+        zero, one, two, three = 0, 0, 0, 0
+        oppzero, oppone, opptwo, oppthree = 0, 0, 0, 0
+        if clanwar["state"] == "notInWar":
+            clan = "notInWar"
+            return render_template("current_war.html", clan=clanwar)
+        else:
+            for member in clanwar["clan"]["members"]:
+                if "attacks" in member:
+                    for attack in member["attacks"]:
+                        stars = attack["stars"]
+                        if stars == 0:
+                            zero += 1
+                        elif stars == 1:
+                            one += 1
+                        elif stars == 2:
+                            two += 1
+                        elif stars == 3:
+                            three += 1
+            for member in clanwar["opponent"]["members"]:
+                if "attacks" in member:
+                    for attack in member["attacks"]:
+                        stars = attack["stars"]
+                        if stars == 0:
+                            oppzero += 1
+                        elif stars == 1:
+                            oppone += 1
+                        elif stars == 2:
+                            opptwo += 1
+                        elif stars == 3:
+                            oppthree += 1
+            members_info = []
 
-        for member in clanwar["clan"]["members"]:
-            attacks_left = 2
-            if "attacks" in member:
-                attacks_left -= len(member["attacks"])
+            for member in clanwar["clan"]["members"]:
+                attacks_left = 2
+                if "attacks" in member:
+                    attacks_left -= len(member["attacks"])
 
-            new_dict = {
-                "name": member["name"],
-                "position": member.get("mapPosition", float("inf")),
-                "attacks_left": attacks_left,
-            }
-            members_info.append(new_dict)
+                new_dict = {
+                    "name": member["name"],
+                    "position": member.get("mapPosition", float("inf")),
+                    "attacks_left": attacks_left,
+                }
+                members_info.append(new_dict)
 
-        members_info = sorted(members_info, key=lambda x: x["position"])
+            members_info = sorted(members_info, key=lambda x: x["position"])
 
-        return render_template(
-            "current_war.html",
-            clan=clanwar,
-            three=three,
-            two=two,
-            one=one,
-            zero=zero,
-            oppzero=oppzero,
-            oppone=oppone,
-            opptwo=opptwo,
-            oppthree=oppthree,
-            clanmem=clanwar["clan"],
-            members_info=members_info,
-        )
+            return render_template(
+                "current_war.html",
+                clan=clanwar,
+                three=three,
+                two=two,
+                one=one,
+                zero=zero,
+                oppzero=oppzero,
+                oppone=oppone,
+                opptwo=opptwo,
+                oppthree=oppthree,
+                clanmem=clanwar["clan"],
+                members_info=members_info,
+            )
+    except Exception as e:
+        print(f"Error during login: {e}")  # Log the error for debugging
+        return redirect(url_for("error", message="An unexpected error occurred. Please try again."))
 
 
 @app.get("/security_check")
