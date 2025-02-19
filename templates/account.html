@@ -57,6 +57,13 @@
         font-weight: bold;
         cursor: pointer;
     }
+    .alert-msg {  
+        display: inline-block;  
+        margin-right: 10px;
+        margin-top: 10px;
+        text-align: center;
+        font-size: 15px;;
+    }  
 </style>
 </head>
 <div class="container">
@@ -88,6 +95,7 @@
         <label for="account-name" class="alert-label">Receiving SMS alerts: Yes</label>
         <a class="alert-button" href="/delete_phone">Stop Alerts</a>  
         {% endif %}
+        <label class="alert-msg">SMS alerts currently function for regular wars but are not working during Clan War League yet.</label>
     </div>
 {% if player == "Not Set"%}
 
