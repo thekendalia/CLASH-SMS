@@ -91,4 +91,4 @@ def monitor_war():
                             attacks = 2 - attacks_left
                             send_war_reminder(player_tag[0],player_tag[3],player_tag[4], attacks)
 
-        time.sleep(120)  # Check every minute
+        time.sleep(300)  # Check every minute
