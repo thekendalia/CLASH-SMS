@@ -27,6 +27,7 @@ import unittest
 from unittest.mock import patch, MagicMock
 import threading
 from otherpy.war import monitor_war
+from otherpy.bot import bot
 load_dotenv()
 
 app = Flask(__name__)
@@ -69,6 +70,15 @@ def start_war_monitoring():
     thread.start()
 
 start_war_monitoring()
+
+TOKEN = os.getenv("DISCORD_TOKEN")
+
+def start_discord():
+    thread = threading.Thread(target=lambda: bot.run(TOKEN), daemon=True)
+    thread.start()
+
+# Start the Discord bot in a separate thread
+start_discord()
 
 @app.route("/send")
 def send(code, email):
@@ -151,6 +161,10 @@ def phone():
 @app.route('/error')
 def error():
     return render_template('error.html')
+
+@app.route('/gone_fishing')
+def maintenance():
+    return render_template('maintenance.html')
 
 @app.route('/error_msg')
 def error_msg():
