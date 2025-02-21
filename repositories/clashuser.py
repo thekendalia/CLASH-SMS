@@ -100,13 +100,13 @@ def login_user(username: str, userpass: str):
     pool = get_pool()
     print(pool)
     with pool.connection() as conn:  
-        with conn.cursor() as cur: 
-            cur.execute(
+        with conn.cursor() as cursor: 
+            cursor.execute(
                 'SELECT id, username, email, password FROM users WHERE lower(username) = %s OR lower(email) = %s',
                 (username.lower(), username.lower())
             )
             print("Working1")
-            user_record = cur.fetchone()  
+            user_record = cursor.fetchone()  
             print("Working2")
             if user_record:  
                 user_id, db_username, clash_name, hashed_password = user_record  
@@ -137,12 +137,12 @@ def user_data(email: str):
 def clan_tag():
     pool = get_pool()
     with pool.connection() as conn:
-        with conn.cursor() as cur:
-            cur.execute(
+        with conn.cursor() as cursor:
+            cursor.execute(
                 'SELECT username, clan_tag, phone FROM users WHERE clan_tag != %s',
                 ('0',)
             )
-            user_records = cur.fetchall()
+            user_records = cursor.fetchall()
 
             if user_records:
                 # Create a list of dictionaries containing username, clan_tag, and phone
