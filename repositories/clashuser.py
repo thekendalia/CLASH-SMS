@@ -99,8 +99,10 @@ def delete_account(email: str):
 def login_user(username: str, userpass: str):
     pool = get_pool()
     print(pool)
-    with pool.connection() as conn:  
+    with pool.connection() as conn:
+        print("Working")
         with conn.cursor() as cursor: 
+            print("Working0")
             cursor.execute(
                 'SELECT id, username, email, password FROM users WHERE lower(username) = %s OR lower(email) = %s',
                 (username.lower(), username.lower())
