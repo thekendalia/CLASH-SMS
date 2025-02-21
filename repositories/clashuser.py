@@ -95,20 +95,33 @@ def delete_account(email: str):
             conn.commit()
             
 
-def login_user(username: str, userpass: str):   
+import logging  
+
+def login_user(username: str, userpass: str):  
+    logging.info(f"Attempting to log in user: {username}")  
+
     pool = get_pool()  
-    with pool.connection() as conn:  
-        with conn.cursor() as cur: 
-            cur.execute('SELECT id, username, email, password FROM users WHERE lower(username) = %s OR lower(email) = %s', (username, username))  
-            user_record = cur.fetchone()  
-            
-            if user_record:  
-                user_id, db_username, clash_name, hashed_password = user_record  
+    
+    try:  
+        with pool.connection() as conn:  
+            with conn.cursor() as cur:  
+                logging.info("Successfully acquired a database connection.")  
                 
-                user_bytes = userpass.encode('utf-8')  
-                if bcrypt.checkpw(user_bytes, hashed_password.encode('utf-8')):  
-                    return True, user_id, db_username, clash_name
-            return False, None, None, 'Invalid username or password'
+                cur.execute('SELECT id, username, email, password FROM users WHERE lower(username) = %s OR lower(email) = %s', (username.lower(), username.lower()))  
+                user_record = cur.fetchone()   
+                
+                if user_record:  
+                    user_id, db_username, clash_name, hashed_password = user_record   
+
+                    if bcrypt.checkpw(userpass.encode('utf-8'), hashed_password.encode('utf-8')):  
+                        logging.info("User logged in successfully.")  
+                        return True, user_id, db_username, clash_name  
+
+                logging.warning("Invalid username or password.")  
+                return False, None, None, 'Invalid username or password'  
+    except Exception as e:  
+        logging.error(f"Error during login: {e}")  
+        return False, None, None, 'An error occurred during login'
         
 def user_data(email: str):   
     pool = get_pool()  
