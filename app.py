@@ -110,17 +110,9 @@ def send(code, email):
 @app.get("/")
 def home():
     username = dict(session).get("username", None)
-    sum = 0
-    response = requests.get(url1, headers=headers)
     message = request.args.get("message", "")
-    if response.status_code == 200:
-        clan_info = response.json()
-        for member in clan_info.get("items", []):
-            member_names.append(member["name"])
-            sum = sum + 1
     return render_template(
         "home.html",
-        nummems=sum,
         no_header=False,
         no_search_bar=True,
         username=username,
@@ -596,9 +588,10 @@ def userlogin():
         username = request.form["username"]
         password = request.form["password"]
         user = username.lower()
-
+        print(username)
+        print(password)
+        print(f"Trying to log in: {user}")
         log, id, user_name, email = clashuser.login_user(user, password)
-        print(log)
 
         if log == False:
             return redirect(url_for("login", submitted=True, message="Incorrect Password"))
