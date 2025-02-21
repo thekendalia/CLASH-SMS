@@ -95,33 +95,29 @@ def delete_account(email: str):
             conn.commit()
             
 
-import logging  
+import bcrypt
 
-def login_user(username: str, userpass: str):  
-    logging.info(f"Attempting to log in user: {username}")  
-
+def login_user(username: str, userpass: str):
     pool = get_pool()  
-    
-    try:  
-        with pool.connection() as conn:  
-            with conn.cursor() as cur:  
-                logging.info("Successfully acquired a database connection.")  
+    with pool.connection() as conn:  
+        with conn.cursor() as cur: 
+            cur.execute(
+                'SELECT id, username, email, password FROM users WHERE lower(username) = %s OR lower(email) = %s',
+                (username.lower(), username.lower())
+            )  
+            user_record = cur.fetchone()  
+            
+            if user_record:  
+                user_id, db_username, clash_name, hashed_password = user_record  
                 
-                cur.execute('SELECT id, username, email, password FROM users WHERE lower(username) = %s OR lower(email) = %s', (username.lower(), username.lower()))  
-                user_record = cur.fetchone()   
+                user_bytes = userpass.encode('utf-8')
+                hashed_password = hashed_password.encode('utf-8') if isinstance(hashed_password, str) else hashed_password  
                 
-                if user_record:  
-                    user_id, db_username, clash_name, hashed_password = user_record   
+                if bcrypt.checkpw(user_bytes, hashed_password):  
+                    return True, user_id, db_username, clash_name
+            
+            return False, None, None, None
 
-                    if bcrypt.checkpw(userpass.encode('utf-8'), hashed_password.encode('utf-8')):  
-                        logging.info("User logged in successfully.")  
-                        return True, user_id, db_username, clash_name  
-
-                logging.warning("Invalid username or password.")  
-                return False, None, None, 'Invalid username or password'  
-    except Exception as e:  
-        logging.error(f"Error during login: {e}")  
-        return False, None, None, 'An error occurred during login'
         
 def user_data(email: str):   
     pool = get_pool()  
