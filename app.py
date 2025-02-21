@@ -126,6 +126,17 @@ def home():
         username=username,
         message=message,
     )
+    
+
+def count():
+    sum = 0
+    response = requests.get(url1, headers=headers)
+    if response.status_code == 200:
+        clan_info = response.json()
+        for member in clan_info.get("items", []):
+            member_names.append(member["name"])
+            sum = sum + 1
+    return sum
 
 
 @app.get("/create")
