@@ -104,18 +104,20 @@ def login_user(username: str, userpass: str):
             cur.execute(
                 'SELECT id, username, email, password FROM users WHERE lower(username) = %s OR lower(email) = %s',
                 (username.lower(), username.lower())
-            )  
+            )
+            print("Working1")
             user_record = cur.fetchone()  
-            
+            print("Working2")
             if user_record:  
                 user_id, db_username, clash_name, hashed_password = user_record  
-                
+                print("Working3")
                 user_bytes = userpass.encode('utf-8')
                 hashed_password = hashed_password.encode('utf-8') if isinstance(hashed_password, str) else hashed_password  
-                
+                print("Working4")
                 if bcrypt.checkpw(user_bytes, hashed_password):  
+                    print("Working5")
                     return True, user_id, db_username, clash_name
-            
+                
             return False, None, None, None
 
         
