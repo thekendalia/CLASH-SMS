@@ -588,8 +588,6 @@ def userlogin():
         username = request.form["username"]
         password = request.form["password"]
         user = username.lower()
-        print(username)
-        print(password)
         print(f"Trying to log in: {user}")
         log, id, user_name, email = clashuser.login_user(user, password)
 

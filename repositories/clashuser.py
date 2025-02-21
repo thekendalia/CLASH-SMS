@@ -97,7 +97,8 @@ def delete_account(email: str):
 
 
 def login_user(username: str, userpass: str):
-    pool = get_pool()  
+    pool = get_pool()
+    print(username)
     with pool.connection() as conn:  
         with conn.cursor() as cur: 
             cur.execute(
