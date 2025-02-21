@@ -597,13 +597,13 @@ def userlogin():
         password = request.form["password"]
         user = username.lower()
 
-        log, id, username, email = clashuser.login_user(user, password)
+        log, id, user_name, email = clashuser.login_user(user, password)
         print(log)
 
         if log == False:
             return redirect(url_for("login", submitted=True, message="Incorrect Password"))
 
-        session["username"] = username
+        session["username"] = user_name
         session["email"] = email
         return redirect(url_for("home"))
 
