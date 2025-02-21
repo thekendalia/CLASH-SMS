@@ -16,7 +16,7 @@ def get_pool():
         pool = ConnectionPool(  
             conninfo=db_url,  
             min_size=1,  # Minimum number of connections  
-            max_size=10,  # Adjust based on your needs  
+            max_size=30,  # Adjust based on your needs  
             max_lifetime=45  # Optional: Max lifetime of connections in seconds  
         )  
     return pool  
