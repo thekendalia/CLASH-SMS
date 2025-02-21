@@ -95,8 +95,26 @@ def delete_account(email: str):
             conn.commit()
             
 
-
-def login_user(username: str, userpass: str):
+def login_user(email: str, userpass: str):
+    pool = get_pool()
+    with pool.connection() as conn:
+        with conn.cursor() as cur:
+            # Check if the user exists and fetch credentials
+            cur.execute('SELECT id, username, email, password FROM users WHERE email = %s', (email,))
+            user_record = cur.fetchone()
+            if user_record:  
+                user_id, db_username, clash_name, hashed_password = user_record  
+                print("Working3")
+                user_bytes = userpass.encode('utf-8')
+                hashed_password = hashed_password.encode('utf-8') if isinstance(hashed_password, str) else hashed_password  
+                print("Working4")
+                if bcrypt.checkpw(user_bytes, hashed_password):  
+                    print("Working5")
+                    return True, user_id, db_username, clash_name
+                
+            return False, None, None, None
+        
+def login_user_mine(username: str, userpass: str):
     pool = get_pool()
     print(pool)
     with pool.connection() as conn:
