@@ -17,6 +17,8 @@ from flask import (
 import random
 import schedule
 from repositories import clashuser
+from repositories.clashuser import new_account
+from repositories.clashuser import login_user
 from repositories.clashuser import delete_clash_users
 from repositories.clash import get_member_th_level
 from flask import Flask
@@ -622,7 +624,7 @@ def userlogin():
         password = request.form["password"]
         user = username.lower()
         print(f"Trying to log in: {user}")
-        log, id, user_name, email = clashuser.login_user(user, password)
+        log, id, user_name, email = login_user(user, password)
 
         if log == False:
             return redirect(url_for("login", submitted=True, message="Incorrect Password"))
