@@ -168,7 +168,24 @@
         .alert-label {  
             display: inline-block;  
             margin-right: 10px;
-        }  
+        }
+        .alert-label-message {  
+            display: inline-block;  
+            margin-right: 10px;
+            color:red;
+        }
+        .alert-button-disabled {  
+            pointer-events: none;  /* Prevents clicking */  
+            color: gray;           /* Change to grey to indicate it is disabled */  
+            cursor: not-allowed;   /* Change cursor appearance */  
+            text-decoration: none;
+            padding: 5px 10px;  
+            background-color: #505153;
+            color: white;  
+            border: none;  
+            border-radius: 3px;  
+            cursor: pointer;  
+        }   
         .alert-button {  
             padding: 5px 10px;  
             background-color: #007bff;

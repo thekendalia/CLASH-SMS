@@ -26,7 +26,6 @@ from datetime import datetime, timedelta
 import unittest
 from unittest.mock import patch, MagicMock
 import threading
-from otherpy.war import monitor_war
 from otherpy.bot import bot
 
 
@@ -67,11 +66,6 @@ app.config["MAIL_USE_SSL"] = False
 app.config['MAIL_DEBUG'] = False
 
 mail = Mail(app)
-def start_war_monitoring():
-    thread = threading.Thread(target=monitor_war, daemon=True)
-    thread.start()
-
-start_war_monitoring()
 
 TOKEN = os.getenv("DISCORD_TOKEN")
 
@@ -107,6 +101,35 @@ def send(code, email):
     mail.send(msg)
     return "Message sent!"
 
+ 
+def submit_data(email, phone_number, terms, tag, clan, name):  
+
+    # Process or validate your data as needed  
+    data_to_send = {  
+        'email': email,  
+        'phone_number': phone_number,  
+        'is_active': terms, 
+        'clan_tag': tag,
+        'clan': clan,
+        'name': name
+    }  
+    print(data_to_send)
+    response = send_to_make(data_to_send)  # Call function to send data to Make.com  
+    return jsonify(response)  
+
+def send_to_make(data):  
+    make_url = "https://hook.us1.make.com/jjqxw5n6htjay3irpqiyc5s8ky9911ej"  # Replace with your actual Make.com webhook URL  
+    try:  
+        response = requests.post(make_url, json=data)  
+        if response.status_code == 200:  
+            return {'status': 'success', 'data': data}  
+        else:  
+            return {'status': 'error', 'message': response.text}  
+    except Exception as e:  
+        return {'status': 'error', 'message': str(e)}  
+
+if __name__ == '__main__':  
+    app.run(debug=True)  
 
 
 @app.get("/")
@@ -149,7 +172,7 @@ def passreset():
 @app.route("/sms")
 def sms():
     email = dict(session).get("email", None)
-    istrue, id, username, cemail, clan_tag, terms, phone = clashuser.user_data(email)
+    istrue, id, username, cemail, clan_tag, terms, phone, clan = clashuser.user_data(email)
     if email == None:
         return redirect(url_for("home"))
     return render_template("sms.html", terms=terms)
@@ -161,6 +184,10 @@ def phone():
     phone = request.form['phone']
     number = country + " " + phone
     clashuser.update_phone(email, number)
+    istrue, id, username, cemail, clan_tag, terms, phone, clan = clashuser.user_data(email)
+    print(phone)
+    print(terms)
+    submit_data(email, phone, terms, clan_tag, clan, username)
     return redirect(url_for('account'))
 
 @app.route('/error')
@@ -193,7 +220,8 @@ def error_msg():
 @app.route("/delete_phone")
 def delete_phone():
     email = dict(session).get("email", None)
-    istrue, id, username, cemail, clan_tag, terms, phone = clashuser.user_data(email)
+    istrue, id, username, cemail, clan_tag, terms, phone, clan = clashuser.user_data(email)
+    submit_data(email, 0, False, 0, 0, 0)
     clashuser.update_term_status_false(email)
     clashuser.update_phone(email, "0")
     return redirect(url_for('account'))
@@ -201,9 +229,8 @@ def delete_phone():
 @app.post("/accept_terms")
 def accept_terms():
     email = dict(session).get("email", None)
-    terms = request.form.get('terms')
-    print(terms)
-    if terms == None:
+    terms_accept = request.form.get('terms')
+    if terms_accept == None:
         return redirect(url_for('sms'))
     else:
         clashuser.update_term_status_true(email)
@@ -289,7 +316,7 @@ def index():
 def clanstats():
     try:
         email = dict(session).get("email", None)
-        istrue, id, username, cemail, clan_tag, terms, phone = clashuser.user_data(email)
+        istrue, id, username, cemail, clan_tag, terms, phone, user_clan = clashuser.user_data(email)
         if clan_tag == '0':
             session['tab'] = "clanstats"
             return redirect(url_for("accounttag"))
@@ -358,9 +385,8 @@ def users():
 
 @app.get("/account")
 def account():
-    try:
         email = dict(session).get("email", None)
-        istrue, id, username, cemail, clan_tag, terms, phone = clashuser.user_data(email)
+        istrue, id, username, cemail, clan_tag, terms, phone, clan = clashuser.user_data(email)
         if clan_tag == '0':
             session['tab'] = "account"
             return redirect(url_for("accounttag"))
@@ -368,6 +394,13 @@ def account():
         tag = clan_tag[1:]
         response4 = requests.get(f"https://api.clashofclans.com/v1/players/%23{tag}", headers=headers)
         clanwar = response4.json()
+        player_clan = clanwar['clan']['tag'][1:]
+        response4 = requests.get(f"https://api.clashofclans.com/v1/clans/%23{player_clan}/currentwar", headers=headers)
+        war_log = response4.json()
+        if war_log.get('reason') == 'accessDenied':
+            disabled = True
+        else:
+            disabled = False
         if email == None:
             return redirect(url_for("home"))
         if skip and skip[0] == "Not Set":
@@ -376,10 +409,7 @@ def account():
             return render_template("account.html", username=username, email=cemail, tag=clan_tag, player=player, terms=terms, phone=phone)
         if clan_tag == "0":
             return redirect(url_for("accounttag"))
-        return render_template("account.html", username=username, email=cemail, tag=clan_tag, player=clanwar,terms=terms, phone=phone)
-    except Exception as e:
-        print(f"Error during login: {e}")  # Log the error for debugging
-        return redirect(url_for("error", message="An unexpected error occurred. Please try again."))
+        return render_template("account.html", username=username, email=cemail, tag=clan_tag, player=clanwar,terms=terms, phone=phone, disabled=disabled)
     
 @app.get("/accountskip")
 def accountskip():
@@ -446,7 +476,7 @@ def auth():
 def current_war():
     try: 
         email = dict(session).get("email", None)
-        istrue, id, username, cemail, clan_tag, terms, phone = clashuser.user_data(email)
+        istrue, id, username, cemail, clan_tag, terms, phone, clan = clashuser.user_data(email)
         if clan_tag == '0':
             session['tab'] = "clanstats"
             return redirect(url_for("accounttag"))
@@ -456,6 +486,8 @@ def current_war():
         player_clan = playerdata['clan']['tag'][1:]
         response4 = requests.get(f"https://api.clashofclans.com/v1/clans/%23{player_clan}/currentwar", headers=headers)
         clanwar = response4.json()
+        if clanwar.get('reason') == 'accessDenied':
+            return redirect(url_for('home', message="Your clan needs public war logs for this function to work"))
         print(clanwar)
         zero, one, two, three = 0, 0, 0, 0
         oppzero, oppone, opptwo, oppthree = 0, 0, 0, 0
@@ -542,7 +574,6 @@ def adduser():
 
 from flask import request, redirect, url_for, render_template
 import bcrypt
-from otherpy.war import monitor_war
 
 
 @app.post("/createacc")

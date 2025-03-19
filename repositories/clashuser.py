@@ -138,14 +138,14 @@ def user_data(email: str):
     pool = get_pool()  
     with pool.connection() as conn:  
         with conn.cursor() as cur:   
-            cur.execute('SELECT id, username, email, clan_tag, terms, phone FROM users WHERE email = %s', (email,))  
+            cur.execute('SELECT id, username, email, clan_tag, terms, phone, clan FROM users WHERE email = %s', (email,))  
             user_record = cur.fetchone()  
             
             if user_record:  
-                user_id, db_username, clash_name, clan_tag, terms, phone = user_record  
+                user_id, db_username, clash_name, clan_tag, terms, phone, clan = user_record  
                 
-                return True, user_id, db_username, clash_name, clan_tag, terms, phone
-            return False, None, None, 'Invalid username or password', None, None, None
+                return True, user_id, db_username, clash_name, clan_tag, terms, phone, clan
+            return False, None, None, 'Invalid username or password', None, None, None, None
         
 def clan_tag():
     pool = get_pool()

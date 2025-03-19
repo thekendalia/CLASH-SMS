@@ -63,6 +63,7 @@
         margin-top: 10px;
         text-align: center;
         font-size: 15px;;
+        color: white;
     }  
 </style>
 </head>
@@ -74,9 +75,13 @@
         <p id="account-name">{{username}}</p>
         <label for="account-name">Email:</label>
         <p id="account-name">{{email}}</p>
-        {% if terms == false %}
+        {% if terms == false and disabled == true %}
         <label for="account-name" class="alert-label">Receiving SMS alerts: No</label>
-        <a class="alert-button" href="/sms">Receive SMS alerts</a>  
+        <a class="alert-button-disabled" href="/sms">Receive SMS alerts</a>
+        <label for="account-name" class="alert-label-message" style="margin-top: 10px;">Your clans war log must be public for this to work</a>
+        {% elif terms == false and disabled == false %}
+        <label for="account-name" class="alert-label">Receiving SMS alerts: No</label>
+        <a class="alert-button" href="/sms">Receive SMS alerts</a> 
         {% elif terms == true and phone == '0' %}
         <label for="account-name" class="alert-label">Accepted Terms: Yes</label> 
         <a class="alert-button" href="/sms">Set Phone Number</a> 
