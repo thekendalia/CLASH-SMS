@@ -96,42 +96,52 @@ def delete_account(email: str):
             
 
 
+import bcrypt  
+
 def login_user(username: str, userpass: str):  
+    # Get a connection pool  
     pool = get_pool()  
     print(pool)  
     
     try:  
         with pool.connection() as conn:  
-            print("Working")  
+            print("Connection established")  
             with conn.cursor() as cursor:   
-                print("Working0")  
+                print("Cursor established")  
                 print(f"Querying for username/email: {username.lower()}")  
+                
                 try:  
                     cursor.execute(  
                         'SELECT id, username, email, password FROM users WHERE lower(username) = %s OR lower(email) = %s',  
                         (username.lower(), username.lower())  
                     )  
-                    print("Working1")  
                     user_record = cursor.fetchone()  
-                    print("Working2")  
+                    print("User record fetched")  
+                    
                     if user_record:  
                         user_id, db_username, clash_name, hashed_password = user_record  
-                        print("Working3")  
+                        print("User record unpacked")  
+                        
+                        # Encode the password entered by the user  
                         user_bytes = userpass.encode('utf-8')  
-
-                        # Ensure correct handling of hashed_password  
                         hashed_password = hashed_password.encode('utf-8') if isinstance(hashed_password, str) else hashed_password  
-                        print("Working4")  
-
+                        
+                        # Check if the password matches the hashed password  
                         if bcrypt.checkpw(user_bytes, hashed_password):  
-                            print("Working5")  
+                            print("Password match, user logged in")  
                             return True, user_id, db_username, clash_name  
+                        else:  
+                            print("Password does not match")  
+                            return False, None, None, None  # Invalid password  
+                    else:  
+                        print("User not found")  
+                        return False, None, None, None  # User not found  
                 except Exception as query_error:  
                     print(f"Error executing query: {query_error}")  
-
-            return False, None, None, None  
+                    return False, None, None, None  # Error occurred in querying  
     except Exception as conn_error:  
-        print(f"Error during connection: {conn_error}")
+        print(f"Connection error: {conn_error}")  
+        return False, None, None, None  # Connection error occurred  
 
         
 def user_data(email: str):   
