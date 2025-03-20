@@ -95,9 +95,6 @@ def delete_account(email: str):
             conn.commit()
             
 
-
-import bcrypt  
-
 def login_user(username: str, userpass: str):  
     # Get a connection pool  
     pool = get_pool()  
